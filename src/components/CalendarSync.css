@@ -1,0 +1,32 @@
+.calendar-sync-container {
+    text-align: center;
+    margin-top: 50px;
+  }
+  
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+  }
+  
+  .btn-signin, .btn-sync {
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin: 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+  }
+  
+  .btn-signin:hover, .btn-sync:hover {
+    background-color: #357ae8;
+  }
+  
+  .sync-status {
+    margin-top: 20px;
+    font-size: 1.2rem;
+    color: #333;
+  }
+  
