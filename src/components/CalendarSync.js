@@ -14,6 +14,7 @@ function TaskManagerApp() {
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(new Date());
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
     function start() {
@@ -41,6 +42,16 @@ function TaskManagerApp() {
       return;
     }
 
+    // Log start and end times to the console
+    console.log('Start Time:', startTime.toISOString());
+    console.log('End Time:', endTime.toISOString());
+
+    // Check if the end time is before or equal to the start time
+    if (endTime <= startTime) {
+      alert('End time must be later than start time.');
+      return;
+    }
+
     const event = {
       summary: taskName,
       start: {
@@ -58,9 +69,34 @@ function TaskManagerApp() {
       resource: event,
     }).then((response) => {
       if (response.status === 200) {
+        // Save the event ID for deletion later
+        const newTask = {
+          id: response.result.id, // Save the event ID
+          name: taskName,
+        };
+
+        setTasks([...tasks, newTask]);
         alert('Task synced to Google Calendar');
       } else {
         alert('Failed to sync task');
+      }
+    });
+  };
+
+  const handleDelete = (taskId) => {
+    // Remove task from the local task list
+    const updatedTasks = tasks.filter((task) => task.id !== taskId);
+    setTasks(updatedTasks);
+
+    // Delete the event from Google Calendar using the event ID
+    gapi.client.calendar.events.delete({
+      calendarId: 'primary',
+      eventId: taskId,
+    }).then((response) => {
+      if (response.status === 204) {
+        alert('Task deleted from Google Calendar');
+      } else {
+        alert('Failed to delete task from Google Calendar');
       }
     });
   };
@@ -91,9 +127,6 @@ function TaskManagerApp() {
 
           <h2>Google Calendar Task Sync</h2>
           <div style={{ marginBottom: '10px' }}>
-            <label>Task Name: {taskName}</label>
-          </div>
-          <div style={{ marginBottom: '10px' }}>
             <label>Start Time: </label>
             <DatePicker
               selected={startTime}
@@ -121,6 +154,19 @@ function TaskManagerApp() {
           >
             Sync Task to Google Calendar
           </button>
+
+          {/* Task List */}
+          <h2>Task List</h2>
+          <ul>
+            {tasks.map((task, index) => (
+              <li key={task.id}>
+                {task.name} 
+                <button onClick={() => handleDelete(task.id)} style={{ marginLeft: '10px', color: 'red' }}>
+                  Delete
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

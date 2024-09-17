@@ -1,12 +1,14 @@
 import React from 'react';
 
-function TaskList({ tasks }) {
+function TaskList({ tasks, deleteTask }) {
   return (
     <div>
-      <h2>Your Tasks</h2>
+      <h3>Task List</h3>
       <ul>
         {tasks.map((task, index) => (
-          <li key={index}>{task}</li>
+          <li key={index}>
+            {task} <button onClick={() => deleteTask(index)}>Delete</button>
+          </li>
         ))}
       </ul>
     </div>
