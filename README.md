@@ -5,9 +5,8 @@ This project is a task management application built with React that allows users
 The motivation behind this project is to simplify task management by providing users with an intuitive interface to add tasks, track them, and sync with Google Calendar.
 
 ## Features
-- Add, edit, and delete tasks
+- Add, delete and view tasks
 - Sync tasks with Google Calendar for better task management
-- View tasks in a calendar format
 - Responsive design, ensuring a great user experience across all devices
 
 ## Installation
