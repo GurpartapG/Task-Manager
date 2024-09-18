@@ -3,8 +3,8 @@ import { gapi } from 'gapi-script';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
-const CLIENT_ID = '152975720241-l24aqnbvq6temtr8e3u801p6k9ej0eth.apps.googleusercontent.com';
-const API_KEY = 'AIzaSyDw4W0PYVQFvs9UMHX7XzOXZDCCWS83yuA';
+const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+const API_KEY = process.env.REACT_APP_GOOGLE_API_KEY;
 
 const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'];
 const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
@@ -15,6 +15,7 @@ function TaskManagerApp() {
   const [endTime, setEndTime] = useState(new Date());
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true); // Add a loading state
 
   useEffect(() => {
     function start() {
@@ -27,13 +28,23 @@ function TaskManagerApp() {
         const authInstance = gapi.auth2.getAuthInstance();
         setIsSignedIn(authInstance.isSignedIn.get());
         authInstance.isSignedIn.listen(setIsSignedIn);
+        setLoading(false); // Stop loading once gapi is ready
+      }).catch(err => {
+        console.error('Error initializing Google API:', err);
+        setLoading(false);
       });
     }
+
     gapi.load('client:auth2', start);
   }, []);
 
   const handleAuthClick = () => {
-    gapi.auth2.getAuthInstance().signIn();
+    const authInstance = gapi.auth2.getAuthInstance();
+    if (authInstance) {
+      authInstance.signIn();
+    } else {
+      alert('Google API not loaded properly. Please try again.');
+    }
   };
 
   const handleSyncClick = () => {
@@ -42,11 +53,9 @@ function TaskManagerApp() {
       return;
     }
 
-    // Log start and end times to the console
     console.log('Start Time:', startTime.toISOString());
     console.log('End Time:', endTime.toISOString());
 
-    // Check if the end time is before or equal to the start time
     if (endTime <= startTime) {
       alert('End time must be later than start time.');
       return;
@@ -69,26 +78,25 @@ function TaskManagerApp() {
       resource: event,
     }).then((response) => {
       if (response.status === 200) {
-        // Save the event ID for deletion later
         const newTask = {
-          id: response.result.id, // Save the event ID
+          id: response.result.id,
           name: taskName,
         };
-
         setTasks([...tasks, newTask]);
         alert('Task synced to Google Calendar');
       } else {
         alert('Failed to sync task');
       }
+    }).catch(err => {
+      console.error('Error syncing task to calendar:', err);
+      alert('Failed to sync task');
     });
   };
 
   const handleDelete = (taskId) => {
-    // Remove task from the local task list
     const updatedTasks = tasks.filter((task) => task.id !== taskId);
     setTasks(updatedTasks);
 
-    // Delete the event from Google Calendar using the event ID
     gapi.client.calendar.events.delete({
       calendarId: 'primary',
       eventId: taskId,
@@ -98,8 +106,15 @@ function TaskManagerApp() {
       } else {
         alert('Failed to delete task from Google Calendar');
       }
+    }).catch(err => {
+      console.error('Error deleting task from calendar:', err);
+      alert('Failed to delete task');
     });
   };
+
+  if (loading) {
+    return <p>Loading Google API...</p>; // Show a loading message while waiting for gapi
+  }
 
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: 'auto' }}>
@@ -160,7 +175,7 @@ function TaskManagerApp() {
           <ul>
             {tasks.map((task, index) => (
               <li key={task.id}>
-                {task.name} 
+                {task.name}
                 <button onClick={() => handleDelete(task.id)} style={{ marginLeft: '10px', color: 'red' }}>
                   Delete
                 </button>
